@@ -1,0 +1,1424 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>高中英語單詞拼寫特訓 (AI增強版)</title>
+
+    <script>
+        window.onerror = function (msg, url, line, col, error) {
+            console.error('Error: ' + msg + '\nurl: ' + url + '\nline: ' + line);
+        };
+    </script>
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
+    <style>
+        /* 原有样式保持不变 */
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+            touch-action: manipulation;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+            padding-bottom: 20px;
+        }
+
+        /* 动画定义 */
+        @keyframes shake {
+
+            0%,
+            100% {
+                transform: translateX(0);
+            }
+
+            10%,
+            30%,
+            50%,
+            70%,
+            90% {
+                transform: translateX(-5px);
+            }
+
+            20%,
+            40%,
+            60%,
+            80% {
+                transform: translateX(5px);
+            }
+        }
+
+        @keyframes pop {
+            0% {
+                transform: scale(0.8);
+                opacity: 0;
+            }
+
+            100% {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        @keyframes bounce {
+
+            0%,
+            20%,
+            50%,
+            80%,
+            100% {
+                transform: translateY(0);
+            }
+
+            40% {
+                transform: translateY(-10px);
+            }
+
+            60% {
+                transform: translateY(-5px);
+            }
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+
+            to {
+                opacity: 1;
+            }
+        }
+
+        .anim-shake {
+            animation: shake 0.4s cubic-bezier(.36, .07, .19, .97) both;
+        }
+
+        .anim-pop {
+            animation: pop 0.3s ease-out forwards;
+        }
+
+        .anim-bounce {
+            animation: bounce 0.8s ease;
+        }
+
+        .anim-spin {
+            animation: spin 1s linear infinite;
+        }
+
+        .anim-slide-up {
+            animation: slideUp 0.4s ease-out forwards;
+        }
+
+        .anim-fade-in {
+            animation: fadeIn 0.3s ease-out forwards;
+        }
+
+        .mono-font {
+            font-family: 'Courier New', Courier, monospace;
+        }
+
+        .input-focus-ring:focus {
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.3);
+            border-color: #4299e1;
+        }
+
+        #confetti-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 999;
+        }
+
+        /* 模态框样式 */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            padding: 20px;
+            backdrop-filter: blur(4px);
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            max-width: 500px;
+            width: 100%;
+            max-height: 80vh;
+            overflow-y: auto;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+        }
+
+        /* 其他样式保持不变 */
+        .chat-bubble {
+            max-width: 90%;
+            padding: 10px 14px;
+            border-radius: 12px;
+            font-size: 0.9rem;
+            line-height: 1.5;
+            margin-bottom: 10px;
+            word-wrap: break-word;
+        }
+
+        .chat-user {
+            background-color: #3b82f6;
+            color: white;
+            align-self: flex-end;
+            border-bottom-right-radius: 2px;
+        }
+
+        .chat-ai {
+            background-color: #f3f4f6;
+            color: #1f2937;
+            align-self: flex-start;
+            border-bottom-left-radius: 2px;
+            border: 1px solid #e5e7eb;
+        }
+
+        .typing-dot {
+            display: inline-block;
+            width: 5px;
+            height: 5px;
+            border-radius: 50%;
+            background-color: #6b7280;
+            animation: typing 1.4s infinite ease-in-out both;
+            margin: 0 2px;
+        }
+
+        .typing-dot:nth-child(1) {
+            animation-delay: -0.32s;
+        }
+
+        .typing-dot:nth-child(2) {
+            animation-delay: -0.16s;
+        }
+
+        @keyframes typing {
+
+            0%,
+            80%,
+            100% {
+                transform: scale(0);
+            }
+
+            40% {
+                transform: scale(1);
+            }
+        }
+
+        .prose p {
+            margin-bottom: 0.4em;
+        }
+
+        .prose ul {
+            list-style-type: disc;
+            padding-left: 1.2em;
+        }
+
+        .cursor-not-allowed {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .tab-active {
+            color: #7c3aed;
+            border-bottom: 2px solid #7c3aed;
+            background-color: #f5f3ff;
+        }
+
+        .tab-inactive {
+            color: #6b7280;
+            border-bottom: 2px solid transparent;
+        }
+
+        .tab-inactive:hover {
+            color: #374151;
+            background-color: #f9fafb;
+        }
+    </style>
+</head>
+
+<body class="flex flex-col items-center p-4 text-gray-800">
+
+    <canvas id="confetti-canvas"></canvas>
+
+    <div class="w-full max-w-md flex flex-wrap justify-between items-center mb-4 px-1 gap-2">
+        <div class="flex items-center gap-2 text-gray-600 bg-white/50 px-3 py-1 rounded-full backdrop-blur-sm">
+            <i class="fas fa-book"></i>
+            <span class="font-bold text-xs">剩餘: <span id="words-left">0</span></span>
+        </div>
+
+        <div class="flex gap-2 flex-wrap justify-end">
+            <button onclick="showApiKeyModal()"
+                class="bg-gray-100 text-gray-700 px-3 py-1 rounded-full text-xs font-bold border border-gray-300 shadow-sm active:scale-95 transition-transform"
+                title="設置 API Key">
+                <i class="fas fa-key mr-1"></i>Key
+            </button>
+
+            <button onclick="document.getElementById('excel-input').click()"
+                class="bg-green-100 text-green-700 px-3 py-1 rounded-full text-xs font-bold border border-green-200 shadow-sm active:scale-95 transition-transform">
+                <i class="fas fa-file-excel mr-1"></i>導入
+            </button>
+            <input type="file" id="excel-input" accept=".xlsx, .xls" class="hidden" />
+
+            <button onclick="showCustomWordModal()"
+                class="bg-purple-100 text-purple-700 px-3 py-1 rounded-full text-xs font-bold border border-purple-200 shadow-sm active:scale-95 transition-transform">
+                <i class="fas fa-edit mr-1"></i>管理
+            </button>
+
+            <button onclick="clearCustomWords()"
+                class="bg-red-50 text-red-400 px-2 py-1 rounded-full text-xs border border-red-100" title="重置為預設詞庫">
+                <i class="fas fa-trash"></i>
+            </button>
+        </div>
+    </div>
+
+    <div class="w-full max-w-md flex justify-end mb-2 px-1">
+        <div
+            class="bg-orange-100 text-orange-600 px-3 py-1 rounded-full text-xs font-bold border border-orange-200 shadow-sm">
+            🔥 Streak: <span id="streak-count">0</span>
+        </div>
+    </div>
+
+    <div
+        class="w-full max-w-md bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-100 relative mb-4 z-10">
+
+        <div class="w-full bg-gray-100 h-1.5">
+            <div id="progress-bar" class="bg-blue-500 h-1.5 transition-all duration-300" style="width: 0%"></div>
+        </div>
+
+        <div class="p-6 flex flex-col items-center gap-4">
+
+            <div class="text-center w-full relative mt-2">
+                <button id="play-audio-btn"
+                    class="absolute right-0 top-0 text-blue-500 hover:text-blue-600 p-2 rounded-full hover:bg-blue-50 transition-colors"
+                    title="重聽讀音">
+                    <i class="fas fa-volume-up text-xl"></i>
+                </button>
+
+                <p class="text-xs text-gray-400 uppercase tracking-wider font-bold mb-1">請拼寫</p>
+
+                <h2 id="chinese-word"
+                    class="text-3xl font-bold text-gray-800 leading-tight min-h-[3rem] flex items-center justify-center px-4 break-words">
+                    加載中...
+                </h2>
+
+                <div class="flex items-center justify-center gap-2 mt-1">
+                    <span id="ipa-text"
+                        class="text-sm text-gray-500 font-sans bg-gray-100 px-2 py-0.5 rounded hidden"></span>
+                    <span id="pos-tag" class="text-sm text-blue-500 font-mono bg-blue-50 px-2 py-0.5 rounded"></span>
+                </div>
+            </div>
+
+            <div id="hint-container"
+                class="w-full min-h-[1.5rem] px-2 flex flex-col items-center justify-center overflow-hidden">
+                <div id="hint-text"
+                    class="font-bold mono-font text-orange-500 transition-all min-h-[1.5rem] text-center break-words w-full">
+                </div>
+            </div>
+
+            <div class="w-full relative" id="input-wrapper">
+                <input type="text" id="user-input"
+                    class="w-full text-center text-2xl p-4 border-2 border-gray-300 rounded-xl bg-gray-50 input-focus-ring transition-colors mono-font placeholder-gray-300 shadow-inner"
+                    placeholder="輸入英文..." autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
+
+                <div id="status-icon"
+                    class="absolute right-4 top-1/2 transform -translate-y-1/2 text-2xl hidden anim-pop">
+                    <i class="fas fa-check-circle text-green-500"></i>
+                </div>
+            </div>
+
+            <div class="w-full flex flex-col gap-3">
+                <button id="check-btn"
+                    class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3.5 rounded-xl text-lg shadow-md active:scale-[0.98] transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed disabled:bg-gray-400">
+                    <span>提交答案</span>
+                </button>
+
+                <button id="skip-btn"
+                    class="w-full bg-yellow-500 hover:bg-yellow-600 text-white font-bold py-3.5 rounded-xl shadow-md active:scale-[0.98] transition-all flex items-center justify-center gap-2">
+                    <span>跳過</span> <i class="fas fa-forward"></i>
+                </button>
+
+                <button id="next-btn"
+                    class="hidden w-full bg-green-500 hover:bg-green-600 text-white font-bold py-3.5 rounded-xl shadow-md active:scale-[0.98] transition-all flex items-center justify-center gap-2 anim-slide-up">
+                    <span>下一題</span> <i class="fas fa-arrow-right"></i>
+                </button>
+            </div>
+
+            <p id="message-text" class="text-center text-sm font-medium text-gray-500 h-5 transition-colors"></p>
+        </div>
+
+        <div id="confusion-card" class="bg-yellow-50 border-t border-yellow-100 p-4 hidden anim-fade-in">
+            <div class="flex gap-3">
+                <div class="text-yellow-500 text-xl pt-1"><i class="fas fa-lightbulb"></i></div>
+                <div>
+                    <h4 class="font-bold text-yellow-800 text-sm mb-1">知識點筆記</h4>
+                    <p id="confusion-text" class="text-sm text-yellow-700 leading-relaxed"></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div
+        class="w-full max-w-md bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden flex flex-col flex-1 min-h-[300px]">
+        <div class="bg-gray-50 p-3 border-b border-gray-200 flex justify-between items-center">
+            <div class="flex items-center gap-2 text-gray-700">
+                <i class="fas fa-robot text-purple-500"></i>
+                <span class="font-bold text-sm">DeepSeek 助教</span>
+            </div>
+            <span id="ai-status" class="text-xs text-gray-400 bg-gray-200 px-2 py-0.5 rounded">等待答題</span>
+        </div>
+
+        <div class="flex border-b border-gray-200 text-sm font-bold select-none">
+            <button id="tab-current-btn" class="flex-1 py-2 tab-active transition-colors">當前題目</button>
+            <button id="tab-history-btn" class="flex-1 py-2 tab-inactive transition-colors">歷史對話</button>
+        </div>
+
+        <div id="chat-container" class="flex-1 overflow-hidden relative bg-white">
+            <div id="chat-current" class="absolute inset-0 overflow-y-auto p-4 flex flex-col gap-2">
+            </div>
+
+            <div id="chat-history" class="absolute inset-0 overflow-y-auto p-4 flex flex-col gap-2 hidden bg-gray-50">
+                <div class="text-center text-gray-400 text-xs mt-8">
+                    <i class="fas fa-history mb-2 text-xl"></i>
+                    <p>暫無歷史記錄</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="p-3 border-t bg-gray-50 flex gap-2 relative">
+            <div id="ai-lock-mask"
+                class="absolute inset-0 bg-gray-100/80 backdrop-blur-[1px] z-10 flex items-center justify-center text-gray-500 text-sm font-medium cursor-not-allowed">
+                <i class="fas fa-lock mr-2"></i> 請先完成當前題目
+            </div>
+
+            <input type="text" id="ai-input"
+                class="flex-1 border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:border-purple-500 text-sm"
+                placeholder="例如：這個詞的例句？" disabled>
+            <button id="send-ai-btn"
+                class="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 disabled:opacity-50 disabled:bg-gray-400 transition-colors"
+                disabled>
+                <i class="fas fa-paper-plane"></i>
+            </button>
+        </div>
+    </div>
+
+    <div id="custom-word-modal" class="modal-overlay hidden">
+        <div class="modal-content">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg font-bold text-gray-800">自定義詞庫管理</h3>
+                <button onclick="hideCustomWordModal()" class="text-gray-500 hover:text-gray-700">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+
+            <div class="mb-4">
+                <div class="flex gap-2 mb-3">
+                    <input type="text" id="new-en-word" placeholder="英文單詞"
+                        class="flex-1 border border-gray-300 rounded px-3 py-2 text-sm">
+                    <input type="text" id="new-zh-word" placeholder="中文解釋"
+                        class="flex-1 border border-gray-300 rounded px-3 py-2 text-sm">
+                    <input type="text" id="new-pos-word" placeholder="詞性"
+                        class="w-20 border border-gray-300 rounded px-3 py-2 text-sm">
+                </div>
+                <div class="flex gap-2 mb-3">
+                    <input type="text" id="new-ipa-word" placeholder="音標"
+                        class="flex-1 border border-gray-300 rounded px-3 py-2 text-sm">
+                    <input type="text" id="new-note-word" placeholder="備註"
+                        class="flex-1 border border-gray-300 rounded px-3 py-2 text-sm">
+                </div>
+                <button onclick="addCustomWord()"
+                    class="w-full bg-blue-500 text-white py-2 rounded font-bold hover:bg-blue-600 transition-colors">
+                    <i class="fas fa-plus mr-2"></i>添加新單詞
+                </button>
+            </div>
+
+            <div class="border-t pt-4">
+                <h4 class="font-bold text-gray-700 mb-2">當前詞庫</h4>
+                <div id="custom-word-list" class="max-h-60 overflow-y-auto space-y-2">
+                </div>
+            </div>
+
+            <div class="flex gap-2 mt-4 pt-4 border-t">
+                <button onclick="analyzeUserLevel()"
+                    class="flex-1 bg-purple-500 text-white py-2 rounded font-bold hover:bg-purple-600 transition-colors">
+                    <i class="fas fa-chart-line mr-2"></i>智能分析水平
+                </button>
+                <button onclick="hideCustomWordModal()"
+                    class="flex-1 bg-gray-500 text-white py-2 rounded font-bold hover:bg-gray-600 transition-colors">
+                    關閉
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div id="api-key-modal" class="modal-overlay hidden">
+        <div class="modal-content text-center">
+            <div class="mb-4">
+                <i class="fas fa-key text-4xl text-yellow-500 mb-2"></i>
+                <h3 class="text-xl font-bold text-gray-800">設置 AI 密鑰</h3>
+                <p class="text-sm text-gray-500 mt-1">請輸入您的 DeepSeek API Key 以啟用 AI 助教功能。</p>
+            </div>
+
+            <div class="mb-4 text-left">
+                <label class="block text-gray-700 text-sm font-bold mb-2">API Key (sk-開頭)</label>
+                <input type="password" id="api-key-input"
+                    class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:border-blue-500"
+                    placeholder="sk-xxxxxxxxxxxxxxxxxxxxxxxx">
+                <p class="text-xs text-gray-400 mt-2">
+                    <i class="fas fa-shield-alt mr-1"></i>安全聲明：Key 僅保存在您的瀏覽器本地 (Local Storage)，絕不會上傳至任何第三方服務器。
+                </p>
+            </div>
+
+            <div class="flex gap-2">
+                <button onclick="saveApiKey()"
+                    class="flex-1 bg-blue-600 text-white py-2 rounded-lg font-bold hover:bg-blue-700 transition-colors shadow-md">
+                    保存並啟用
+                </button>
+                <button onclick="closeApiKeyModal()" class="px-4 py-2 text-gray-500 hover:text-gray-700">
+                    暫不設置
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- 配置 ---
+        const DEEPSEEK_API_URL = "https://api.deepseek.com/v1/chat/completions";
+        const LOCAL_STORAGE_KEY = "spelling_custom_vocab";
+        const USER_STATS_KEY = "spelling_user_stats";
+        const API_KEY_STORAGE_KEY = "user_deepseek_api_key";
+
+        // --- 基础词库 ---
+        const baseVocabularyDB = [
+            { en: ["debate", "argue"], zh: "爭辯；辯論", pos: "v./n.", ipa: "/dɪˈbeɪt/", note: "Argue 側重於個人的爭吵或說理，Debate 側重於公開的、正式的辯論。" },
+            { en: "present", zh: "展示；禮物；現在的", pos: "v./n./adj.", ipa: "/ˈpreznt/", note: "注意發音：作'禮物'講重音在前(PRE-sent)，作'展示'講重音在後(pre-SENT)。" },
+            { en: "desert", zh: "沙漠；拋棄", pos: "n./v.", ipa: "/ˈdezət/", note: "易混：Dessert (甜點) 有兩個S。記憶口訣：甜點想吃兩份(ss)，沙漠很乾只有一個(s)。" },
+            { en: "identity", zh: "身份；特性", pos: "n.", ipa: "/aɪˈdentəti/" },
+            { en: "fluent", zh: "流利的", pos: "adj.", ipa: "/ˈfluːənt/", note: "常用搭配：be fluent in English (英語流利)。" },
+            { en: "frequent", zh: "頻繁的", pos: "adj.", ipa: "/ˈfriːkwənt/" },
+            { en: "command", zh: "命令；指令；掌握", pos: "n./v.", ipa: "/kəˈmɑːnd/", note: "Have a good command of... (精通...)" },
+            { en: "recognize", zh: "辨認出；承認", pos: "v.", ipa: "/ˈrekəɡnaɪz/" },
+            { en: "schedule", zh: "時間表；安排", pos: "n./v.", ipa: "/ˈʃedjuːl/", note: "英式發音類似'shed-ule'，美式發音類似'sked-ule'。" },
+            { en: "reliable", zh: "可靠的", pos: "adj.", ipa: "/rɪˈlaɪəbl/", note: "動詞是 Rely (rely on)。" },
+            { en: "ambulance", zh: "救護車", pos: "n.", ipa: "/ˈæmbjələns/" },
+            { en: "appreciate", zh: "感激；欣賞", pos: "v.", ipa: "/əˈpriːʃieɪt/", note: "I appreciate it. (我很感激)。後面直接接事，不接人。" },
+            { en: "benefit", zh: "益處；使受益", pos: "n./v.", ipa: "/ˈbenɪfɪt/", note: "Benefit from... (從...中受益)。" },
+            { en: "ceremony", zh: "典禮；儀式", pos: "n.", ipa: "/ˈserəməni/" },
+            { en: "colleague", zh: "同事", pos: "n.", ipa: "/ˈkɒliːɡ/", note: "College 是大學，Colleague 是同事，注意拼寫區別。" },
+            { en: "convenient", zh: "方便的", pos: "adj.", ipa: "/kənˈviːniənt/", note: "主語通常是物，不能說 'I am convenient'。" },
+            { en: "deadline", zh: "截止日期", pos: "n.", ipa: "/ˈdedlaɪn/" },
+            { en: "dilemma", zh: "進退兩難的境地", pos: "n.", ipa: "/dɪˈlemə/" },
+            { en: "embarrassed", zh: "尷尬的", pos: "adj.", ipa: "/ɪmˈbærəst/", note: "注意拼寫：雙R雙S (rr, ss)。" },
+            { en: "enthusiastic", zh: "熱情的", pos: "adj.", ipa: "/ɪnˌθjuːziˈæstɪk/" },
+            { en: "environment", zh: "環境", pos: "n.", ipa: "/ɪnˈvaɪrənmənt/" },
+            { en: "focus", zh: "焦點；集中", pos: "v./n.", ipa: "/ˈfəʊkəs/", note: "Focus on... (集中注意力於...)" },
+            { en: "generous", zh: "慷慨的；大方的", pos: "adj.", ipa: "/ˈdʒenərəs/" },
+            { en: "graduate", zh: "畢業；畢業生", pos: "v./n.", ipa: "/ˈɡrædʒuət/" },
+            { en: "immediately", zh: "立即；馬上", pos: "adv.", ipa: "/ɪˈmiːdiətli/" },
+            { en: "independent", zh: "獨立的", pos: "adj.", ipa: "/ˌɪndɪˈpendənt/" },
+            { en: "kindergarten", zh: "幼兒園", pos: "n.", ipa: "/ˈkɪndəɡɑːtn/", note: "源自德語，注意中間是 't' 不是 'd' (garTen)。" },
+            { en: "luggage", zh: "行李", pos: "n.", ipa: "/ˈlʌɡɪdʒ/", note: "不可數名詞，一件行李用 a piece of luggage。" },
+            { en: "motivation", zh: "動力；積極性", pos: "n.", ipa: "/ˌməʊtɪˈveɪʃn/" },
+            { en: "nutrition", zh: "營養", pos: "n.", ipa: "/njuˈtrɪʃn/" },
+            { en: "opportunity", zh: "機會", pos: "n.", ipa: "/ˌɒpəˈtjuːnəti/" },
+            { en: "participant", zh: "參與者", pos: "n.", ipa: "/pɑːˈtɪsɪpənt/" },
+            { en: "phenomenon", zh: "現象", pos: "n.", ipa: "/fəˈnɒmɪnən/", note: "複數形式是 phenomena。" },
+            { en: "recommend", zh: "推薦", pos: "v.", ipa: "/ˌrekəˈmend/", note: "雙M (mm)。" },
+            { en: "responsible", zh: "負責的", pos: "adj.", ipa: "/rɪˈspɒnsəbl/", note: "Be responsible for..." },
+            { en: "scenery", zh: "風景；景色", pos: "n.", ipa: "/ˈsiːnəri/", note: "不可數名詞。View 通常指從高處看的景色，Scenery 指自然風光整體。" },
+            { en: "surround", zh: "包圍；環繞", pos: "v.", ipa: "/səˈraʊnd/", note: "Surroundings (環境/周圍事物，複數)。" },
+            { en: "technology", zh: "科技", pos: "n.", ipa: "/tekˈnɒlədʒi/" },
+            { en: "tradition", zh: "傳統", pos: "n.", ipa: "/trəˈdɪʃn/" },
+            { en: "urgent", zh: "緊急的", pos: "adj.", ipa: "/ˈɜːdʒənt/" },
+            { en: "volunteer", zh: "志願者", pos: "n./v.", ipa: "/ˌvɒlənˈtɪə/" }
+        ];
+
+        // 全局词库 (合并后)
+        let vocabularyDB = [];
+
+        // --- 用户统计和水平分析 ---
+        let userStats = {
+            totalAnswered: 0,
+            correctAnswers: 0,
+            wrongAnswers: 0,
+            skippedWords: 0,
+            wordHistory: [], // 记录每个单词的答题情况
+            level: "beginner", // beginner, intermediate, advanced
+            weakAreas: [] // 薄弱知识点
+        };
+
+        // --- 游戏状态 ---
+        let gameData = {
+            deck: [],
+            currentWord: null,
+            attempts: 0,
+            streak: 0,
+            isAnswered: false,
+            revealedMask: null,
+            lastWrongInput: ""
+        };
+
+        // --- DOM 元素 ---
+        const els = {
+            chinese: document.getElementById('chinese-word'),
+            pos: document.getElementById('pos-tag'),
+            ipa: document.getElementById('ipa-text'),
+            input: document.getElementById('user-input'),
+            hintText: document.getElementById('hint-text'),
+            checkBtn: document.getElementById('check-btn'),
+            skipBtn: document.getElementById('skip-btn'),
+            nextBtn: document.getElementById('next-btn'),
+            msg: document.getElementById('message-text'),
+            streak: document.getElementById('streak-count'),
+            wordsLeft: document.getElementById('words-left'),
+            inputWrapper: document.getElementById('input-wrapper'),
+            statusIcon: document.getElementById('status-icon'),
+            progressBar: document.getElementById('progress-bar'),
+            confusionCard: document.getElementById('confusion-card'),
+            confusionText: document.getElementById('confusion-text'),
+            playAudioBtn: document.getElementById('play-audio-btn'),
+            excelInput: document.getElementById('excel-input'),
+            aiInput: document.getElementById('ai-input'),
+            sendAiBtn: document.getElementById('send-ai-btn'),
+            chatCurrent: document.getElementById('chat-current'),
+            chatHistory: document.getElementById('chat-history'),
+            aiLockMask: document.getElementById('ai-lock-mask'),
+            aiStatus: document.getElementById('ai-status'),
+            tabCurrentBtn: document.getElementById('tab-current-btn'),
+            tabHistoryBtn: document.getElementById('tab-history-btn'),
+            // 自定义词库模态框元素
+            customWordModal: document.getElementById('custom-word-modal'),
+            customWordList: document.getElementById('custom-word-list'),
+            newEnWord: document.getElementById('new-en-word'),
+            newZhWord: document.getElementById('new-zh-word'),
+            newPosWord: document.getElementById('new-pos-word'),
+            newIpaWord: document.getElementById('new-ipa-word'),
+            newNoteWord: document.getElementById('new-note-word'),
+            // API Key 模态框元素
+            apiKeyModal: document.getElementById('api-key-modal'),
+            apiKeyInput: document.getElementById('api-key-input')
+        };
+
+        // --- 音效與TTS ---
+        let audioCtx;
+        try {
+            audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        } catch (e) {
+            console.warn("Web Audio API not supported");
+        }
+
+        function playSound(type) {
+            if (!audioCtx) return;
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+
+            if (type === 'correct') {
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(600, audioCtx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(1000, audioCtx.currentTime + 0.1);
+                gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+                gain.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 0.3);
+                osc.start(); osc.stop(audioCtx.currentTime + 0.3);
+            } else {
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(150, audioCtx.currentTime);
+                gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+                gain.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 0.3);
+                osc.start(); osc.stop(audioCtx.currentTime + 0.3);
+            }
+        }
+
+        function speakWord(text) {
+            if ('speechSynthesis' in window) {
+                window.speechSynthesis.cancel();
+                const u = new SpeechSynthesisUtterance(text);
+                u.lang = 'en-US';
+                u.rate = 0.9;
+                window.speechSynthesis.speak(u);
+            }
+        }
+
+        // --- API Key 管理逻辑 ---
+        function getApiKey() {
+            return localStorage.getItem(API_KEY_STORAGE_KEY) || "";
+        }
+
+        function showApiKeyModal() {
+            els.apiKeyInput.value = getApiKey();
+            els.apiKeyModal.classList.remove('hidden');
+        }
+
+        function closeApiKeyModal() {
+            els.apiKeyModal.classList.add('hidden');
+        }
+
+        function saveApiKey() {
+            const key = els.apiKeyInput.value.trim();
+            if (key && !key.startsWith("sk-")) {
+                alert("Key 格式似乎不正確，通常以 sk- 開頭");
+                return;
+            }
+            if (!key) {
+                if (confirm("確定要清空 Key 嗎？AI 功能將無法使用。")) {
+                    localStorage.removeItem(API_KEY_STORAGE_KEY);
+                    closeApiKeyModal();
+                    alert("Key 已清除");
+                }
+                return;
+            }
+            localStorage.setItem(API_KEY_STORAGE_KEY, key);
+            closeApiKeyModal();
+            alert("API Key 已安全保存！");
+
+            // 如果之前有分析失败，可以尝试提示用户现在可以使用了
+            addChatBubble("API Key 已設置，你可以隨時向我提問了！", "ai", true);
+        }
+
+        function checkApiKeyOnLoad() {
+            if (!getApiKey()) {
+                // 首次加载如果没有Key，延迟一点弹出提示
+                setTimeout(showApiKeyModal, 1000);
+            }
+        }
+
+        // --- Excel 導入與合併邏輯 ---
+        function loadVocabulary() {
+            const wordMap = new Map();
+            baseVocabularyDB.forEach(item => {
+                const key = (Array.isArray(item.en) ? item.en[0] : item.en).toLowerCase();
+                wordMap.set(key, item);
+            });
+            const storedCustom = localStorage.getItem(LOCAL_STORAGE_KEY);
+            if (storedCustom) {
+                try {
+                    const customWords = JSON.parse(storedCustom);
+                    customWords.forEach(item => {
+                        const key = (Array.isArray(item.en) ? item.en[0] : item.en).toLowerCase();
+                        wordMap.set(key, item);
+                    });
+                } catch (e) { console.error("Failed to parse local storage vocab", e); }
+            }
+            vocabularyDB = Array.from(wordMap.values());
+            return vocabularyDB;
+        }
+
+        function clearCustomWords() {
+            if (confirm("確定要清除導入的自定義詞庫，只保留系統預設詞彙嗎？")) {
+                localStorage.removeItem(LOCAL_STORAGE_KEY);
+                location.reload();
+            }
+        }
+
+        function handleExcelUpload(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                try {
+                    const data = new Uint8Array(e.target.result);
+                    const workbook = XLSX.read(data, { type: 'array' });
+                    const firstSheetName = workbook.SheetNames[0];
+                    const worksheet = workbook.Sheets[firstSheetName];
+                    const json = XLSX.utils.sheet_to_json(worksheet);
+                    const newWords = json.map(row => ({
+                        en: row.en ? String(row.en).trim() : "",
+                        zh: row.zh ? String(row.zh).trim() : "",
+                        pos: row.pos ? String(row.pos).trim() : "",
+                        ipa: row.ipa ? String(row.ipa).trim() : "",
+                        note: row.note ? String(row.note).trim() : ""
+                    })).filter(w => w.en && w.zh);
+
+                    if (newWords.length === 0) {
+                        alert("未在 Excel 中找到有效數據。請確保表頭包含 en, zh, pos");
+                        return;
+                    }
+                    localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(newWords));
+                    alert(`成功導入 ${newWords.length} 個新單詞！頁面將刷新。`);
+                    location.reload();
+                } catch (err) {
+                    console.error(err);
+                    alert("讀取 Excel 失敗，請檢查文件格式。");
+                }
+            };
+            reader.readAsArrayBuffer(file);
+        }
+
+        // --- 核心邏輯 ---
+        function initGame() {
+            try {
+                loadVocabulary();
+                loadUserStats();
+                gameData.deck = [...vocabularyDB];
+                updateDeckCount();
+                loadNextWord();
+                checkApiKeyOnLoad(); // 检查 API Key
+
+                // 綁定事件
+                els.checkBtn.addEventListener('click', handleCheckSubmit);
+                els.skipBtn.addEventListener('click', handleSkipWord);
+                els.nextBtn.addEventListener('click', loadNextWord);
+                els.playAudioBtn.addEventListener('click', () => {
+                    if (gameData.currentWord) {
+                        const wordToSpeak = Array.isArray(gameData.currentWord.en) ? gameData.currentWord.en[0] : gameData.currentWord.en;
+                        speakWord(wordToSpeak);
+                    }
+                });
+
+                els.input.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter') {
+                        e.preventDefault();
+                        if (!gameData.isAnswered) {
+                            handleCheckSubmit();
+                        }
+                    }
+                });
+
+                els.input.addEventListener('input', () => {
+                    if (!gameData.isAnswered) resetInputStyles();
+                });
+
+                els.excelInput.addEventListener('change', handleExcelUpload);
+                els.sendAiBtn.addEventListener('click', sendAiMessage);
+                els.aiInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') sendAiMessage(); });
+
+                els.tabCurrentBtn.addEventListener('click', () => switchTab('current'));
+                els.tabHistoryBtn.addEventListener('click', () => switchTab('history'));
+            } catch (err) {
+                alert("初始化失敗: " + err.message);
+            }
+        }
+
+        function handleSkipWord() {
+            if (gameData.isAnswered) return;
+            gameData.isAnswered = true;
+            userStats.skippedWords++;
+            userStats.totalAnswered++;
+            recordWordHistory('skipped');
+            saveUserStats();
+
+            const correctWord = Array.isArray(gameData.currentWord.en) ? gameData.currentWord.en[0] : gameData.currentWord.en;
+            els.hintText.innerHTML = `<span class="text-green-600 font-bold">${correctWord}</span>`;
+            updateHintText(correctWord, correctWord.length, true);
+            els.msg.textContent = "已跳過此單詞";
+            els.msg.className = "text-center text-sm font-medium text-yellow-600 h-5";
+            speakWord(correctWord);
+            els.input.disabled = true;
+            showEndState(false, true);
+        }
+
+        function switchTab(tabName) {
+            if (tabName === 'current') {
+                els.chatCurrent.classList.remove('hidden');
+                els.chatHistory.classList.add('hidden');
+                els.tabCurrentBtn.classList.replace('tab-inactive', 'tab-active');
+                els.tabHistoryBtn.classList.replace('tab-active', 'tab-inactive');
+            } else {
+                els.chatCurrent.classList.add('hidden');
+                els.chatHistory.classList.remove('hidden');
+                els.tabCurrentBtn.classList.replace('tab-active', 'tab-inactive');
+                els.tabHistoryBtn.classList.replace('tab-inactive', 'tab-active');
+            }
+        }
+
+        function updateDeckCount() {
+            els.wordsLeft.textContent = gameData.deck.length;
+        }
+
+        function loadNextWord() {
+            if (gameData.deck.length === 0) {
+                alert("太棒了！你已經練完了所有單詞。即將開始新的一輪！");
+                gameData.deck = [...vocabularyDB];
+                updateDeckCount();
+            }
+
+            archiveCurrentChat();
+
+            const randIndex = Math.floor(Math.random() * gameData.deck.length);
+            gameData.currentWord = gameData.deck[randIndex];
+            gameData.deckIndex = randIndex;
+
+            gameData.attempts = 0;
+            gameData.isAnswered = false;
+            gameData.revealedMask = null;
+            gameData.lastWrongInput = "";
+
+            els.chinese.textContent = gameData.currentWord.zh;
+            els.pos.textContent = gameData.currentWord.pos;
+
+            if (gameData.currentWord.ipa) {
+                els.ipa.textContent = gameData.currentWord.ipa;
+                els.ipa.classList.remove('hidden');
+            } else {
+                els.ipa.classList.add('hidden');
+            }
+
+            els.input.value = '';
+            els.input.disabled = false;
+            els.input.focus();
+
+            els.hintText.textContent = '';
+            els.hintText.className = "font-bold mono-font text-orange-500 transition-all min-h-[1.5rem] text-center break-words w-full";
+
+            els.msg.textContent = '';
+            els.confusionCard.classList.add('hidden');
+
+            els.checkBtn.classList.remove('hidden');
+            els.checkBtn.disabled = false;
+            els.skipBtn.classList.remove('hidden');
+            els.nextBtn.classList.add('hidden');
+
+            resetInputStyles();
+            els.statusIcon.classList.add('hidden');
+
+            lockAiChat();
+            initCurrentChatGreeting();
+            switchTab('current');
+
+            els.progressBar.style.width = '0%';
+            setTimeout(() => els.progressBar.style.width = '100%', 100);
+
+            setTimeout(() => {
+                const wordToSpeak = Array.isArray(gameData.currentWord.en) ? gameData.currentWord.en[0] : gameData.currentWord.en;
+                speakWord(wordToSpeak);
+            }, 500);
+        }
+
+        function resetInputStyles() {
+            els.input.classList.remove('border-red-500', 'bg-red-50', 'text-red-600', 'border-green-500', 'bg-green-50', 'text-green-700');
+            els.input.classList.add('border-gray-300', 'bg-gray-50');
+            els.msg.textContent = "";
+        }
+
+        function handleCheckSubmit() {
+            if (gameData.isAnswered) return;
+
+            const userVal = els.input.value.trim().toLowerCase();
+            if (!userVal) {
+                shakeInput();
+                return;
+            }
+
+            const correctAnswers = Array.isArray(gameData.currentWord.en)
+                ? gameData.currentWord.en.map(w => w.toLowerCase())
+                : [gameData.currentWord.en.toLowerCase()];
+
+            const primaryAnswer = correctAnswers[0];
+
+            if (correctAnswers.includes(userVal)) {
+                handleCorrect(userVal);
+            } else {
+                gameData.lastWrongInput = userVal;
+                handleWrong(userVal, primaryAnswer);
+            }
+        }
+
+        function handleCorrect(userAnswer) {
+            gameData.isAnswered = true;
+            gameData.streak++;
+            els.streak.textContent = gameData.streak;
+
+            gameData.deck.splice(gameData.deckIndex, 1);
+            updateDeckCount();
+
+            userStats.correctAnswers++;
+            userStats.totalAnswered++;
+            recordWordHistory('correct');
+            saveUserStats();
+
+            playSound('correct');
+            fireConfetti();
+
+            els.input.classList.remove('border-gray-300', 'bg-gray-50');
+            els.input.classList.add('border-green-500', 'bg-green-50', 'text-green-700', 'anim-bounce');
+            els.input.disabled = true;
+            els.statusIcon.innerHTML = '<i class="fas fa-check-circle text-green-500"></i>';
+            els.statusIcon.classList.remove('hidden');
+
+            els.msg.textContent = "Excellent! 拼寫正確 🎉";
+            els.msg.className = "text-center text-sm font-medium text-green-600 h-5";
+
+            showEndState(true);
+        }
+
+        function handleWrong(userVal, correctVal) {
+            gameData.attempts++;
+            gameData.streak = 0;
+            els.streak.textContent = 0;
+            playSound('wrong');
+            shakeInput();
+
+            els.input.classList.remove('border-gray-300', 'bg-gray-50');
+            els.input.classList.add('border-red-500', 'bg-red-50', 'text-red-600');
+            els.msg.className = "text-center text-sm font-medium text-red-500 h-5";
+
+            if (gameData.attempts === 1) {
+                els.msg.textContent = "不對哦，再試一次";
+                els.input.value = '';
+                els.input.focus();
+            } else if (gameData.attempts === 2) {
+                if (!gameData.revealedMask) {
+                    gameData.revealedMask = generateRandomMask(correctVal);
+                }
+                updateHintText(gameData.revealedMask, correctVal.length);
+                els.msg.textContent = "提示：根據骨架填空";
+                els.input.value = '';
+                els.input.focus();
+            } else {
+                els.hintText.innerHTML = `<span class="text-green-600 font-bold">${correctVal}</span>`;
+                updateHintText(correctVal, correctVal.length, true);
+                els.msg.textContent = "上方為正確拼寫，請對比你的答案";
+                gameData.isAnswered = true;
+
+                userStats.wrongAnswers++;
+                userStats.totalAnswered++;
+                recordWordHistory('wrong');
+                saveUserStats();
+                speakWord(correctVal);
+                els.input.disabled = true;
+                showEndState(false);
+            }
+        }
+
+        function updateHintText(text, length, isHtml = false) {
+            let baseClass = "font-bold mono-font transition-all min-h-[1.5rem] text-center break-words w-full flex items-center justify-center";
+            let colorClass = "text-orange-500";
+            if (isHtml) colorClass = "";
+            if (length > 10) {
+                els.hintText.className = `${baseClass} ${colorClass} text-lg tracking-normal`;
+            } else {
+                els.hintText.className = `${baseClass} ${colorClass} text-xl tracking-[0.3em]`;
+            }
+            if (!isHtml) {
+                els.hintText.textContent = text;
+            }
+        }
+
+        function showEndState(isSuccess, isSkipped = false) {
+            els.checkBtn.disabled = true;
+            els.skipBtn.classList.add('hidden');
+            els.nextBtn.classList.remove('hidden');
+
+            if (gameData.currentWord.note) {
+                els.confusionText.innerHTML = gameData.currentWord.note;
+                els.confusionCard.classList.remove('hidden');
+            }
+
+            unlockAiChat();
+
+            if (!isSuccess && !isSkipped && gameData.lastWrongInput) {
+                autoAnalyzeError(gameData.lastWrongInput, Array.isArray(gameData.currentWord.en) ? gameData.currentWord.en[0] : gameData.currentWord.en);
+            }
+        }
+
+        function shakeInput() {
+            els.inputWrapper.classList.remove('anim-shake');
+            void els.inputWrapper.offsetWidth;
+            els.inputWrapper.classList.add('anim-shake');
+        }
+
+        function generateRandomMask(word) {
+            let res = "";
+            for (let i = 0; i < word.length; i++) {
+                let show = (i === 0 || i === word.length - 1) ? (Math.random() > 0.3) : (Math.random() > 0.6);
+                if (word.length <= 4 && i === 0) show = true;
+                res += show ? word[i] : "_";
+                res += " ";
+            }
+            return res.trim();
+        }
+
+        function loadUserStats() {
+            const storedStats = localStorage.getItem(USER_STATS_KEY);
+            if (storedStats) {
+                try {
+                    userStats = JSON.parse(storedStats);
+                } catch (e) { console.error("Failed to parse user stats", e); }
+            }
+        }
+
+        function saveUserStats() {
+            localStorage.setItem(USER_STATS_KEY, JSON.stringify(userStats));
+        }
+
+        function recordWordHistory(result) {
+            const word = Array.isArray(gameData.currentWord.en) ? gameData.currentWord.en[0] : gameData.currentWord.en;
+            userStats.wordHistory.push({
+                word: word,
+                result: result,
+                timestamp: new Date().toISOString(),
+                attempts: gameData.attempts
+            });
+            if (userStats.wordHistory.length > 100) {
+                userStats.wordHistory = userStats.wordHistory.slice(-100);
+            }
+        }
+
+        function showCustomWordModal() {
+            els.customWordModal.classList.remove('hidden');
+            renderCustomWordList();
+        }
+
+        function hideCustomWordModal() {
+            els.customWordModal.classList.add('hidden');
+        }
+
+        function renderCustomWordList() {
+            const customWords = getCustomWords();
+            els.customWordList.innerHTML = '';
+            if (customWords.length === 0) {
+                els.customWordList.innerHTML = '<p class="text-gray-500 text-center py-4">暫無自定義詞庫</p>';
+                return;
+            }
+            customWords.forEach((word, index) => {
+                const wordDiv = document.createElement('div');
+                wordDiv.className = 'bg-gray-50 p-3 rounded border border-gray-200';
+                wordDiv.innerHTML = `
+                    <div class="flex justify-between items-start mb-2">
+                        <div class="flex-1">
+                            <div class="font-bold text-gray-800">${word.en}</div>
+                            <div class="text-sm text-gray-600">${word.zh}</div>
+                            ${word.pos ? `<span class="text-xs text-blue-500 bg-blue-50 px-2 py-0.5 rounded">${word.pos}</span>` : ''}
+                            ${word.ipa ? `<span class="text-xs text-gray-500 ml-2">${word.ipa}</span>` : ''}
+                        </div>
+                        <div class="flex gap-1">
+                            <button onclick="editCustomWord(${index})" class="text-blue-500 hover:text-blue-700 p-1"><i class="fas fa-edit"></i></button>
+                            <button onclick="deleteCustomWord(${index})" class="text-red-500 hover:text-red-700 p-1"><i class="fas fa-trash"></i></button>
+                        </div>
+                    </div>
+                    ${word.note ? `<div class="text-xs text-gray-500 mt-1">${word.note}</div>` : ''}
+                `;
+                els.customWordList.appendChild(wordDiv);
+            });
+        }
+
+        function getCustomWords() {
+            const storedCustom = localStorage.getItem(LOCAL_STORAGE_KEY);
+            return storedCustom ? JSON.parse(storedCustom) : [];
+        }
+
+        function saveCustomWords(words) {
+            localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(words));
+            loadVocabulary();
+            gameData.deck = [...vocabularyDB];
+            updateDeckCount();
+        }
+
+        function addCustomWord() {
+            const en = els.newEnWord.value.trim();
+            const zh = els.newZhWord.value.trim();
+            const pos = els.newPosWord.value.trim();
+            const ipa = els.newIpaWord.value.trim();
+            const note = els.newNoteWord.value.trim();
+
+            if (!en || !zh) {
+                alert("請填寫英文單詞和中文解釋");
+                return;
+            }
+            const customWords = getCustomWords();
+            customWords.push({ en, zh, pos, ipa, note });
+            saveCustomWords(customWords);
+
+            els.newEnWord.value = ''; els.newZhWord.value = ''; els.newPosWord.value = ''; els.newIpaWord.value = ''; els.newNoteWord.value = '';
+            renderCustomWordList();
+        }
+
+        function editCustomWord(index) {
+            const customWords = getCustomWords();
+            const word = customWords[index];
+            els.newEnWord.value = word.en;
+            els.newZhWord.value = word.zh;
+            els.newPosWord.value = word.pos || '';
+            els.newIpaWord.value = word.ipa || '';
+            els.newNoteWord.value = word.note || '';
+            deleteCustomWord(index);
+        }
+
+        function deleteCustomWord(index) {
+            if (!confirm("確定要刪除這個單詞嗎？")) return;
+            const customWords = getCustomWords();
+            customWords.splice(index, 1);
+            saveCustomWords(customWords);
+            renderCustomWordList();
+        }
+
+        async function analyzeUserLevel() {
+            const apiKey = getApiKey();
+            if (!apiKey) {
+                showApiKeyModal();
+                alert("請先設置 API Key");
+                return;
+            }
+
+            const customWords = getCustomWords();
+            const analysisPrompt = `
+請分析以下英語學習者的水平並給出建議：
+學習統計：
+- 總答題數：${userStats.totalAnswered}
+- 正確答案：${userStats.correctAnswers}
+- 錯誤答案：${userStats.wrongAnswers}
+- 跳過單詞：${userStats.skippedWords}
+- 正確率：${userStats.totalAnswered > 0 ? Math.round((userStats.correctAnswers / userStats.totalAnswered) * 100) : 0}%
+自定義詞庫詞彙（${customWords.length}個）：
+${customWords.map(w => `- ${w.en} (${w.zh})`).join('\n')}
+請根據以上信息：
+1. 評估用戶的英語水平（初級/中級/高級）
+2. 分析用戶的薄弱環節
+3. 給出學習建議
+4. 推薦下一步學習的詞彙主題
+請用中文回答，簡潔明了。`;
+
+            addChatBubble('正在分析您的學習數據...', 'ai', true);
+            hideCustomWordModal();
+
+            try {
+                const response = await fetch(DEEPSEEK_API_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` },
+                    body: JSON.stringify({
+                        model: "deepseek-chat",
+                        messages: [{ role: "user", content: analysisPrompt }],
+                        stream: false
+                    })
+                });
+
+                if (!response.ok) throw new Error("Network error or invalid key");
+                const data = await response.json();
+
+                const responseText = data.choices[0].message.content;
+                if (responseText.includes('高級')) userStats.level = 'advanced';
+                else if (responseText.includes('中級')) userStats.level = 'intermediate';
+                else userStats.level = 'beginner';
+                saveUserStats();
+
+                addChatBubble(responseText, 'ai');
+            } catch (e) {
+                console.error(e);
+                addChatBubble("分析失敗，請檢查網絡連接或 API Key 是否正確。", 'ai');
+            }
+        }
+
+        function initCurrentChatGreeting() {
+            els.chatCurrent.innerHTML = `
+                <div class="chat-bubble chat-ai prose">
+                    你好！請先完成單詞挑戰。<br>答完後如果有疑問，我會隨時解答。
+                </div>
+            `;
+        }
+
+        function archiveCurrentChat() {
+            const bubbles = els.chatCurrent.querySelectorAll('.chat-bubble');
+            if (bubbles.length > 0) {
+                const emptyMsg = els.chatHistory.querySelector('.text-center');
+                if (emptyMsg) emptyMsg.remove();
+                const wordTitle = Array.isArray(gameData.currentWord.en) ? gameData.currentWord.en[0] : gameData.currentWord.en;
+                const archiveBlock = document.createElement('div');
+                archiveBlock.className = "bg-white p-3 rounded-lg shadow-sm border border-gray-100 mb-4";
+                archiveBlock.innerHTML = `<div class="text-xs font-bold text-gray-400 mb-2 border-b pb-1">單詞: ${wordTitle} (${gameData.currentWord.zh})</div>`;
+                bubbles.forEach(b => {
+                    const clone = b.cloneNode(true);
+                    clone.style.fontSize = "0.85rem";
+                    archiveBlock.appendChild(clone);
+                });
+                els.chatHistory.insertBefore(archiveBlock, els.chatHistory.firstChild);
+            }
+            els.chatCurrent.innerHTML = '';
+        }
+
+        function lockAiChat() {
+            els.aiLockMask.classList.remove('hidden');
+            els.aiInput.disabled = true;
+            els.sendAiBtn.disabled = true;
+            els.aiStatus.textContent = "等待答題";
+            els.aiStatus.className = "text-xs text-gray-400 bg-gray-200 px-2 py-0.5 rounded";
+        }
+
+        function unlockAiChat() {
+            els.aiLockMask.classList.add('hidden');
+            els.aiInput.disabled = false;
+            els.sendAiBtn.disabled = false;
+            els.aiStatus.textContent = "可提問";
+            els.aiStatus.className = "text-xs text-green-700 bg-green-100 px-2 py-0.5 rounded font-bold";
+            els.chatCurrent.scrollTop = els.chatCurrent.scrollHeight;
+        }
+
+        async function autoAnalyzeError(wrongInput, correctWord) {
+            const apiKey = getApiKey();
+            if (!apiKey) return; // 如果没key，默默跳过自动分析
+
+            const prompt = `學生在聽寫練習中把單詞 "${correctWord}" 拼寫成了 "${wrongInput}"。請簡要分析錯誤原因（例如：拼寫筆誤、發音混淆、詞性錯誤等），並給出一點記憶建議。請用親切的口吻，50字以內。`;
+
+            addChatBubble('正在分析你的錯誤...', 'ai', true);
+
+            try {
+                const response = await fetch(DEEPSEEK_API_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` },
+                    body: JSON.stringify({
+                        model: "deepseek-chat",
+                        messages: [{ role: "user", content: prompt }],
+                        stream: false
+                    })
+                });
+
+                if (!response.ok) throw new Error("Net err");
+                const data = await response.json();
+
+                els.chatCurrent.lastElementChild.remove();
+                addChatBubble(data.choices[0].message.content, 'ai');
+            } catch (e) {
+                console.error(e);
+                els.chatCurrent.lastElementChild.remove();
+            }
+        }
+
+        async function sendAiMessage() {
+            const apiKey = getApiKey();
+            if (!apiKey) {
+                showApiKeyModal();
+                return;
+            }
+
+            const text = els.aiInput.value.trim();
+            if (!text) return;
+
+            addChatBubble(text, 'user');
+            els.aiInput.value = '';
+
+            const loadingId = 'loading-' + Date.now();
+            const loadingBubble = document.createElement('div');
+            loadingBubble.className = 'chat-bubble chat-ai';
+            loadingBubble.id = loadingId;
+            loadingBubble.innerHTML = '<span class="typing-dot"></span><span class="typing-dot"></span><span class="typing-dot"></span>';
+            els.chatCurrent.appendChild(loadingBubble);
+            els.chatCurrent.scrollTop = els.chatCurrent.scrollHeight;
+
+            const currentWordStr = Array.isArray(gameData.currentWord.en) ? gameData.currentWord.en[0] : gameData.currentWord.en;
+            const systemPrompt = `你是一位高中英語助教。當前單詞: "${currentWordStr}" (${gameData.currentWord.zh})。
+            請回答學生的問題。簡潔、地道。`;
+
+            try {
+                const response = await fetch(DEEPSEEK_API_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` },
+                    body: JSON.stringify({
+                        model: "deepseek-chat",
+                        messages: [
+                            { role: "system", content: systemPrompt },
+                            { role: "user", content: text }
+                        ],
+                        stream: false
+                    })
+                });
+
+                if (!response.ok) throw new Error("Net err");
+                const data = await response.json();
+                document.getElementById(loadingId).remove();
+                addChatBubble(data.choices[0].message.content, 'ai');
+            } catch (error) {
+                document.getElementById(loadingId).remove();
+                addChatBubble("網絡開小差了，或者 API Key 無效。", 'ai');
+            }
+        }
+
+        function addChatBubble(text, role, isSystem = false) {
+            const div = document.createElement('div');
+            div.className = `chat-bubble chat-${role} prose`;
+            if (role === 'ai') div.innerHTML = isSystem ? text : marked.parse(text);
+            else div.textContent = text;
+            els.chatCurrent.appendChild(div);
+            els.chatCurrent.scrollTop = els.chatCurrent.scrollHeight;
+        }
+
+        function fireConfetti() {
+            const canvas = document.getElementById('confetti-canvas');
+            const ctx = canvas.getContext('2d');
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+
+            let particles = [];
+            const colors = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6'];
+
+            for (let i = 0; i < 80; i++) {
+                particles.push({
+                    x: window.innerWidth / 2,
+                    y: window.innerHeight / 2,
+                    r: Math.random() * 5 + 2,
+                    color: colors[Math.floor(Math.random() * colors.length)],
+                    vx: (Math.random() - 0.5) * 12,
+                    vy: (Math.random() - 0.5) * 12,
+                    gravity: 0.2,
+                    alpha: 1
+                });
+            }
+
+            function render() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                let active = false;
+                particles.forEach(p => {
+                    if (p.alpha > 0) {
+                        p.x += p.vx; p.y += p.vy; p.vy += p.gravity; p.alpha -= 0.02;
+                        ctx.globalAlpha = p.alpha; ctx.fillStyle = p.color;
+                        ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2); ctx.fill();
+                        active = true;
+                    }
+                });
+                if (active) requestAnimationFrame(render);
+            }
+            render();
+        }
+
+        window.onload = initGame;
+    </script>
+
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./sw.js')
+                    .then(reg => console.log('Service Worker registered', reg))
+                    .catch(err => console.error('Service Worker registration failed', err));
+            });
+        }
+    </script>
+</body>
+
+</html>
